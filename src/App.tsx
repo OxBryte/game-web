@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 import GameBoard from "./components/GameBoard";
 import ConnectWallet from "./components/ConnectWallet";
 import GameList from "./components/GameList";
-import "./App.css";
 
 export interface GameData {
   gameId: number;
@@ -81,39 +80,49 @@ function App() {
 
   if (!account) {
     return (
-      <div className="app">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-200">
         <ConnectWallet onConnect={connectWallet} />
       </div>
     );
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>🎮 Rock Paper Scissors</h1>
-        <div className="wallet-info">
-          <span>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-slate-200">
+      <header className="bg-white px-5 py-5 shadow-lg flex justify-between items-center sticky top-0 z-50">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent m-0">
+          🎮 Rock Paper Scissors
+        </h1>
+        <div className="flex items-center gap-2.5">
+          <span className="bg-gray-50 px-4 py-2 rounded-full font-mono text-sm text-gray-600 border-2 border-gray-200">
             Connected: {account.slice(0, 6)}...{account.slice(-4)}
           </span>
         </div>
       </header>
 
-      <nav className="nav-tabs">
+      <nav className="bg-white flex border-b border-gray-200 px-5">
         <button
-          className={currentView === "home" ? "active" : ""}
+          className={`bg-transparent border-none px-6 py-4 cursor-pointer text-base font-medium text-gray-600 border-b-3 border-transparent transition-all duration-300 hover:text-primary hover:bg-gray-50 ${
+            currentView === "home"
+              ? "text-primary border-b-primary bg-blue-50"
+              : ""
+          }`}
           onClick={() => setCurrentView("home")}
         >
           Games
         </button>
         <button
-          className={currentView === "create" ? "active" : ""}
+          className={`bg-transparent border-none px-6 py-4 cursor-pointer text-base font-medium text-gray-600 border-b-3 border-transparent transition-all duration-300 hover:text-primary hover:bg-gray-50 ${
+            currentView === "create"
+              ? "text-primary border-b-primary bg-blue-50"
+              : ""
+          }`}
           onClick={() => setCurrentView("create")}
         >
           Create Game
         </button>
       </nav>
 
-      <main className="main-content">
+      <main className="flex-1 py-5 animate-fade-in">
         {currentView === "home" && (
           <GameList
             contract={contract}

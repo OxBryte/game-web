@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import "./GameList.css";
 
 interface GameListProps {
   contract: ethers.Contract | null;
@@ -109,9 +108,9 @@ const GameList: React.FC<GameListProps> = ({
 
   if (loading) {
     return (
-      <div className="game-list">
-        <div className="loading">
-          <div className="spinner"></div>
+      <div className="px-5 max-w-6xl mx-auto">
+        <div className="text-center py-16">
+          <div className="w-10 h-10 border-4 border-gray-300 border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
           <p>Loading games...</p>
         </div>
       </div>
@@ -119,68 +118,97 @@ const GameList: React.FC<GameListProps> = ({
   }
 
   return (
-    <div className="game-list">
-      <div className="list-header">
-        <h2>🎮 Active Games</h2>
-        <button onClick={loadGames} className="refresh-button">
+    <div className="px-5 max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl text-gray-800 m-0">🎮 Active Games</h2>
+        <button
+          onClick={loadGames}
+          className="bg-gray-50 border-2 border-gray-200 px-5 py-2.5 rounded-xl cursor-pointer transition-all duration-300 font-medium hover:bg-gray-200 hover:transform hover:-translate-y-0.5"
+        >
           🔄 Refresh
         </button>
       </div>
 
       {games.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">🎯</div>
-          <h3>No games found</h3>
+        <div className="text-center py-20 text-gray-600">
+          <div className="text-6xl mb-5">🎯</div>
+          <h3 className="text-2xl m-0 mb-2.5">No games found</h3>
           <p>Create a new game to get started!</p>
         </div>
       ) : (
-        <div className="games-grid">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-5">
           {games.map((game) => (
             <div
               key={game.gameId}
-              className={`game-card ${game.isMyGame ? "my-game" : ""} ${
-                game.canJoin ? "joinable" : ""
+              className={`bg-white rounded-2xl p-5 shadow-md transition-all duration-300 border-2 border-transparent hover:transform hover:-translate-y-0.5 hover:shadow-xl ${
+                game.isMyGame
+                  ? "border-green-500 bg-gradient-to-br from-green-50 to-white"
+                  : ""
+              } ${
+                game.canJoin
+                  ? "border-blue-500 bg-gradient-to-br from-blue-50 to-white"
+                  : ""
               }`}
             >
-              <div className="game-header">
-                <span className="game-id">Game #{game.gameId}</span>
+              <div className="flex justify-between items-center mb-4">
+                <span className="font-bold text-lg text-gray-800">
+                  Game #{game.gameId}
+                </span>
                 <span
-                  className={`status ${game.status
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
+                    game.status === "Waiting for Player 2"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : game.status === "Reveal Phase"
+                      ? "bg-blue-100 text-blue-800"
+                      : game.status === "Finished"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
                 >
                   {game.status}
                 </span>
               </div>
 
-              <div className="game-info">
-                <div className="players">
-                  <div className="player">
-                    <span className="label">Player 1:</span>
-                    <span className="address">{formatAddress(game.p1)}</span>
+              <div className="mb-5">
+                <div className="mb-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="font-medium text-gray-600">Player 1:</span>
+                    <span className="font-mono text-gray-800">
+                      {formatAddress(game.p1)}
+                    </span>
                   </div>
-                  <div className="player">
-                    <span className="label">Player 2:</span>
-                    <span className="address">{formatAddress(game.p2)}</span>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-medium text-gray-600">Player 2:</span>
+                    <span className="font-mono text-gray-800">
+                      {formatAddress(game.p2)}
+                    </span>
                   </div>
                 </div>
 
-                <div className="game-details">
-                  <div className="detail">
-                    <span className="label">Stake:</span>
-                    <span className="value">{game.stake} ETH</span>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-gray-600">
+                      Stake:
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {game.stake} ETH
+                    </span>
                   </div>
-                  <div className="detail">
-                    <span className="label">Created:</span>
-                    <span className="value">{formatTime(game.createdAt)}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-gray-600">
+                      Created:
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {formatTime(game.createdAt)}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <div className="game-actions">
+              <div className="flex gap-2.5">
                 {game.canJoin && (
                   <button
-                    className="join-button"
+                    className="flex-1 px-3 py-3 border-none rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30"
                     onClick={() => onSelectGame(game.gameId)}
                   >
                     Join Game
@@ -188,7 +216,7 @@ const GameList: React.FC<GameListProps> = ({
                 )}
                 {game.isMyGame && (
                   <button
-                    className="view-button"
+                    className="flex-1 px-3 py-3 border-none rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gradient-to-r from-green-500 to-green-600 text-white hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-500/30"
                     onClick={() => onSelectGame(game.gameId)}
                   >
                     View Game
@@ -196,7 +224,7 @@ const GameList: React.FC<GameListProps> = ({
                 )}
                 {!game.isMyGame && !game.canJoin && (
                   <button
-                    className="spectate-button"
+                    className="flex-1 px-3 py-3 border-2 border-gray-200 rounded-xl font-semibold cursor-pointer transition-all duration-300 bg-gray-50 text-gray-600 hover:bg-gray-200 hover:transform hover:-translate-y-0.5"
                     onClick={() => onSelectGame(game.gameId)}
                   >
                     Spectate

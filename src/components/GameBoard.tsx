@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import "./GameBoard.css";
 
 interface GameBoardProps {
   contract: ethers.Contract | null;
@@ -252,12 +251,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   if (phase === "create") {
     return (
-      <div className="game-board">
-        <div className="game-card">
-          <h2>🎮 Create New Game</h2>
+      <div className="px-5 max-w-4xl mx-auto">
+        <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+          <h2 className="text-3xl m-0 mb-8 text-gray-800">
+            🎮 Create New Game
+          </h2>
 
-          <div className="stake-input">
-            <label>Stake Amount (ETH):</label>
+          <div className="mb-8">
+            <label className="block font-semibold mb-2.5 text-gray-600">
+              Stake Amount (ETH):
+            </label>
             <input
               type="number"
               step="0.001"
@@ -265,29 +268,34 @@ const GameBoard: React.FC<GameBoardProps> = ({
               value={stake}
               onChange={(e) => setStake(e.target.value)}
               placeholder="0.001"
+              className="w-52 px-3 py-3 border-2 border-gray-200 rounded-xl text-lg text-center focus:outline-none focus:border-primary"
             />
           </div>
 
-          <div className="move-selection">
-            <h3>Choose Your Move:</h3>
-            <div className="moves">
+          <div className="mb-8">
+            <h3 className="text-xl mb-5 text-gray-600">Choose Your Move:</h3>
+            <div className="flex justify-center gap-5 flex-wrap">
               {[Move.Rock, Move.Paper, Move.Scissors].map((move) => (
                 <button
                   key={move}
-                  className={`move-button ${
-                    selectedMove === move ? "selected" : ""
+                  className={`bg-white border-3 rounded-2xl p-5 cursor-pointer transition-all duration-300 min-w-32 flex flex-col items-center gap-2.5 hover:border-primary hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20 ${
+                    selectedMove === move
+                      ? "border-primary bg-gradient-to-br from-primary to-primary-dark text-white transform -translate-y-0.5 shadow-lg shadow-primary/30"
+                      : "border-gray-200"
                   }`}
                   onClick={() => setSelectedMove(move)}
                 >
-                  <span className="move-icon">{getMoveIcon(move)}</span>
-                  <span className="move-name">{getMoveName(move)}</span>
+                  <span className="text-4xl">{getMoveIcon(move)}</span>
+                  <span className="font-semibold text-lg">
+                    {getMoveName(move)}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
           <button
-            className="action-button create"
+            className="px-8 py-4 border-none rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 min-w-52 bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-500/30 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             onClick={createGame}
             disabled={loading || selectedMove === Move.None}
           >
@@ -304,55 +312,63 @@ const GameBoard: React.FC<GameBoardProps> = ({
       gameState.p1.toLowerCase() !== account.toLowerCase();
 
     return (
-      <div className="game-board">
-        <div className="game-card">
-          <h2>🎮 Game #{gameId}</h2>
+      <div className="px-5 max-w-4xl mx-auto">
+        <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+          <h2 className="text-3xl m-0 mb-8 text-gray-800">🎮 Game #{gameId}</h2>
 
-          <div className="game-info">
-            <div className="players-info">
-              <div className="player-info">
-                <span className="label">Player 1:</span>
-                <span className="address">
+          <div className="mb-8 p-5 bg-gray-50 rounded-2xl">
+            <div className="flex flex-col gap-2.5">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-600">Player 1:</span>
+                <span className="font-mono text-gray-800">
                   {gameState.p1.slice(0, 6)}...{gameState.p1.slice(-4)}
                 </span>
               </div>
-              <div className="player-info">
-                <span className="label">Player 2:</span>
-                <span className="address">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-600">Player 2:</span>
+                <span className="font-mono text-gray-800">
                   {gameState.p2 === ethers.constants.AddressZero
                     ? "Waiting..."
                     : `${gameState.p2.slice(0, 6)}...${gameState.p2.slice(-4)}`}
                 </span>
               </div>
-              <div className="player-info">
-                <span className="label">Stake:</span>
-                <span className="value">{gameState.stake} ETH</span>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-600">Stake:</span>
+                <span className="font-semibold text-gray-800">
+                  {gameState.stake} ETH
+                </span>
               </div>
             </div>
           </div>
 
           {canJoin && (
             <>
-              <div className="move-selection">
-                <h3>Choose Your Move:</h3>
-                <div className="moves">
+              <div className="mb-8">
+                <h3 className="text-xl mb-5 text-gray-600">
+                  Choose Your Move:
+                </h3>
+                <div className="flex justify-center gap-5 flex-wrap">
                   {[Move.Rock, Move.Paper, Move.Scissors].map((move) => (
                     <button
                       key={move}
-                      className={`move-button ${
-                        selectedMove === move ? "selected" : ""
+                      className={`bg-white border-3 rounded-2xl p-5 cursor-pointer transition-all duration-300 min-w-32 flex flex-col items-center gap-2.5 hover:border-primary hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20 ${
+                        selectedMove === move
+                          ? "border-primary bg-gradient-to-br from-primary to-primary-dark text-white transform -translate-y-0.5 shadow-lg shadow-primary/30"
+                          : "border-gray-200"
                       }`}
                       onClick={() => setSelectedMove(move)}
                     >
-                      <span className="move-icon">{getMoveIcon(move)}</span>
-                      <span className="move-name">{getMoveName(move)}</span>
+                      <span className="text-4xl">{getMoveIcon(move)}</span>
+                      <span className="font-semibold text-lg">
+                        {getMoveName(move)}
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <button
-                className="action-button join"
+                className="px-8 py-4 border-none rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 min-w-52 bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                 onClick={joinGame}
                 disabled={loading || selectedMove === Move.None}
               >
@@ -362,8 +378,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
           )}
 
           {!canJoin && (
-            <div className="waiting-message">
-              <div className="waiting-icon">⏳</div>
+            <div className="py-10 px-5 text-gray-600">
+              <div className="text-5xl mb-4 animate-pulse-custom">⏳</div>
               <p>Waiting for another player to join...</p>
             </div>
           )}
@@ -374,42 +390,44 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   if (phase === "reveal" && gameState) {
     return (
-      <div className="game-board">
-        <div className="game-card">
-          <h2>🎮 Game #{gameId} - Reveal Phase</h2>
+      <div className="px-5 max-w-4xl mx-auto">
+        <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+          <h2 className="text-3xl m-0 mb-8 text-gray-800">
+            🎮 Game #{gameId} - Reveal Phase
+          </h2>
 
-          <div className="reveal-info">
-            <div className="moves-display">
-              <div className="player-move">
-                <h4>Player 1</h4>
-                <div className="move-display">
+          <div className="mb-8">
+            <div className="flex justify-around items-center my-8 flex-wrap gap-5">
+              <div className="text-center flex-1 min-w-40">
+                <h4 className="m-0 mb-4 text-gray-600 text-lg">Player 1</h4>
+                <div className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center gap-2.5 min-h-24 justify-center">
                   {gameState.p1Move !== Move.None ? (
                     <>
-                      <span className="move-icon">
+                      <span className="text-3xl">
                         {getMoveIcon(gameState.p1Move)}
                       </span>
                       <span>{getMoveName(gameState.p1Move)}</span>
                     </>
                   ) : (
-                    <span className="hidden">❓ Hidden</span>
+                    <span className="text-gray-400 italic">❓ Hidden</span>
                   )}
                 </div>
               </div>
 
-              <div className="vs">VS</div>
+              <div className="text-2xl font-bold text-primary mx-5">VS</div>
 
-              <div className="player-move">
-                <h4>Player 2</h4>
-                <div className="move-display">
+              <div className="text-center flex-1 min-w-40">
+                <h4 className="m-0 mb-4 text-gray-600 text-lg">Player 2</h4>
+                <div className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center gap-2.5 min-h-24 justify-center">
                   {gameState.p2Move !== Move.None ? (
                     <>
-                      <span className="move-icon">
+                      <span className="text-3xl">
                         {getMoveIcon(gameState.p2Move)}
                       </span>
                       <span>{getMoveName(gameState.p2Move)}</span>
                     </>
                   ) : (
-                    <span className="hidden">❓ Hidden</span>
+                    <span className="text-gray-400 italic">❓ Hidden</span>
                   )}
                 </div>
               </div>
@@ -417,16 +435,19 @@ const GameBoard: React.FC<GameBoardProps> = ({
           </div>
 
           {isMyTurn() && (
-            <div className="reveal-section">
-              <h3>Reveal Your Move</h3>
-              <div className="reveal-inputs">
-                <div className="input-group">
-                  <label>Your Move:</label>
+            <div className="mt-8 p-5 bg-gray-50 rounded-2xl">
+              <h3 className="m-0 mb-5 text-gray-600">Reveal Your Move</h3>
+              <div className="flex gap-5 justify-center mb-5 flex-wrap">
+                <div className="flex flex-col gap-1 min-w-52">
+                  <label className="font-semibold text-gray-600 text-left">
+                    Your Move:
+                  </label>
                   <select
                     value={revealMoveState}
                     onChange={(e) =>
                       setRevealMoveState(Number(e.target.value) as Move)
                     }
+                    className="px-2.5 py-2.5 border-2 border-gray-200 rounded-lg text-base focus:outline-none focus:border-primary"
                   >
                     <option value={Move.None}>Select Move</option>
                     <option value={Move.Rock}>🪨 Rock</option>
@@ -435,19 +456,22 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   </select>
                 </div>
 
-                <div className="input-group">
-                  <label>Salt (from creation):</label>
+                <div className="flex flex-col gap-1 min-w-52">
+                  <label className="font-semibold text-gray-600 text-left">
+                    Salt (from creation):
+                  </label>
                   <input
                     type="text"
                     value={revealSalt}
                     onChange={(e) => setRevealSalt(e.target.value)}
                     placeholder="Enter your salt..."
+                    className="px-2.5 py-2.5 border-2 border-gray-200 rounded-lg text-base focus:outline-none focus:border-primary"
                   />
                 </div>
               </div>
 
               <button
-                className="action-button reveal"
+                className="px-8 py-4 border-none rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 min-w-52 bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-orange-500/30 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
                 onClick={submitReveal}
                 disabled={
                   loading || revealMoveState === Move.None || !revealSalt
@@ -459,8 +483,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
           )}
 
           {!isMyTurn() && (
-            <div className="waiting-message">
-              <div className="waiting-icon">⏳</div>
+            <div className="py-10 px-5 text-gray-600">
+              <div className="text-5xl mb-4 animate-pulse-custom">⏳</div>
               <p>Waiting for players to reveal their moves...</p>
             </div>
           )}
@@ -473,28 +497,30 @@ const GameBoard: React.FC<GameBoardProps> = ({
     const winner = getWinner();
 
     return (
-      <div className="game-board">
-        <div className="game-card">
-          <h2>🎮 Game #{gameId} - Finished</h2>
+      <div className="px-5 max-w-4xl mx-auto">
+        <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+          <h2 className="text-3xl m-0 mb-8 text-gray-800">
+            🎮 Game #{gameId} - Finished
+          </h2>
 
-          <div className="final-result">
-            <div className="moves-display">
-              <div className="player-move">
-                <h4>Player 1</h4>
-                <div className="move-display">
-                  <span className="move-icon">
+          <div className="text-center">
+            <div className="flex justify-around items-center my-8 flex-wrap gap-5">
+              <div className="text-center flex-1 min-w-40">
+                <h4 className="m-0 mb-4 text-gray-600 text-lg">Player 1</h4>
+                <div className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center gap-2.5 min-h-24 justify-center">
+                  <span className="text-3xl">
                     {getMoveIcon(gameState.p1Move)}
                   </span>
                   <span>{getMoveName(gameState.p1Move)}</span>
                 </div>
               </div>
 
-              <div className="vs">VS</div>
+              <div className="text-2xl font-bold text-primary mx-5">VS</div>
 
-              <div className="player-move">
-                <h4>Player 2</h4>
-                <div className="move-display">
-                  <span className="move-icon">
+              <div className="text-center flex-1 min-w-40">
+                <h4 className="m-0 mb-4 text-gray-600 text-lg">Player 2</h4>
+                <div className="bg-gray-50 rounded-2xl p-5 flex flex-col items-center gap-2.5 min-h-24 justify-center">
+                  <span className="text-3xl">
                     {getMoveIcon(gameState.p2Move)}
                   </span>
                   <span>{getMoveName(gameState.p2Move)}</span>
@@ -502,26 +528,28 @@ const GameBoard: React.FC<GameBoardProps> = ({
               </div>
             </div>
 
-            <div className="winner-announcement">
+            <div className="mt-8 p-8 rounded-2xl">
               {winner === "tie" && (
-                <div className="result tie">
-                  <span className="result-icon">🤝</span>
-                  <h3>It's a Tie!</h3>
-                  <p>Stakes have been refunded</p>
+                <div className="flex flex-col items-center gap-2.5 bg-gradient-to-br from-yellow-100 to-yellow-200 text-yellow-800 p-8 rounded-2xl">
+                  <span className="text-5xl">🤝</span>
+                  <h3 className="m-0 text-3xl">It's a Tie!</h3>
+                  <p className="m-0 text-lg opacity-80">
+                    Stakes have been refunded
+                  </p>
                 </div>
               )}
               {winner === "p1" && (
-                <div className="result win">
-                  <span className="result-icon">🏆</span>
-                  <h3>Player 1 Wins!</h3>
-                  <p>Winner takes the pot</p>
+                <div className="flex flex-col items-center gap-2.5 bg-gradient-to-br from-green-100 to-emerald-200 text-green-800 p-8 rounded-2xl">
+                  <span className="text-5xl">🏆</span>
+                  <h3 className="m-0 text-3xl">Player 1 Wins!</h3>
+                  <p className="m-0 text-lg opacity-80">Winner takes the pot</p>
                 </div>
               )}
               {winner === "p2" && (
-                <div className="result win">
-                  <span className="result-icon">🏆</span>
-                  <h3>Player 2 Wins!</h3>
-                  <p>Winner takes the pot</p>
+                <div className="flex flex-col items-center gap-2.5 bg-gradient-to-br from-green-100 to-emerald-200 text-green-800 p-8 rounded-2xl">
+                  <span className="text-5xl">🏆</span>
+                  <h3 className="m-0 text-3xl">Player 2 Wins!</h3>
+                  <p className="m-0 text-lg opacity-80">Winner takes the pot</p>
                 </div>
               )}
             </div>
@@ -532,10 +560,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
   }
 
   return (
-    <div className="game-board">
-      <div className="game-card">
-        <div className="loading">
-          <div className="spinner"></div>
+    <div className="px-5 max-w-4xl mx-auto">
+      <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+        <div className="py-16 text-center">
+          <div className="w-10 h-10 border-4 border-gray-300 border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
           <p>Loading game...</p>
         </div>
       </div>
