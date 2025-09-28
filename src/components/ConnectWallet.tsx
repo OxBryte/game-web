@@ -1,10 +1,12 @@
 import React from "react";
+import { useConnect } from "wagmi";
 
 interface ConnectWalletProps {
   onConnect: () => void;
 }
 
-const ConnectWallet: React.FC<ConnectWalletProps> = ({ onConnect }) => {
+const ConnectWallet: React.FC<ConnectWalletProps> = () => {
+  const { connect, connectors, isPending } = useConnect();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark p-5">
       <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-10 text-center shadow-2xl max-w-md w-full">
@@ -47,13 +49,22 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ onConnect }) => {
           </div>
         </div>
 
-        <button
-          className="bg-gradient-to-r from-primary to-primary-dark text-white border-none px-8 py-4 rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-2.5 w-full my-5 hover:transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30"
-          onClick={onConnect}
-        >
-          <span className="text-xl">🦊</span>
-          Connect MetaMask
-        </button>
+        {/* Wallet Connect Buttons */}
+        <div className="space-y-3">
+          {connectors.map((connector) => (
+            <button
+              key={connector.uid}
+              onClick={() => connect({ connector })}
+              disabled={isPending}
+              className="w-full bg-gradient-to-r from-primary to-primary-dark text-white border-none px-8 py-4 rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-2.5 hover:transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="text-xl">
+                {connector.name === "Injected" ? "🦊" : "🔗"}
+              </span>
+              {isPending ? "Connecting..." : `Connect ${connector.name}`}
+            </button>
+          ))}
+        </div>
 
         <p className="text-gray-500 text-sm m-0 leading-relaxed">
           Connect your wallet to start playing Rock Paper Scissors on-chain

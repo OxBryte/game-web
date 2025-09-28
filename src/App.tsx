@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAccount, useDisconnect } from "wagmi";
 import { ethers } from "ethers";
 import GameBoard from "./components/GameBoard";
 import ConnectWallet from "./components/ConnectWallet";
@@ -17,9 +18,10 @@ export interface GameData {
 }
 
 function App() {
-  const [account, setAccount] = useState<string>("");
-  const [provider, setProvider] =
-    useState<ethers.providers.Web3Provider | null>(null);
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+
+  const [, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [currentView, setCurrentView] = useState<
     "home" | "create" | "join" | "game"
@@ -44,44 +46,31 @@ function App() {
   ];
 
   useEffect(() => {
-    if (provider && contractAddress) {
-      const signer = provider.getSigner();
-      const contractInstance = new ethers.Contract(
-        contractAddress,
-        contractABI,
-        signer
-      );
-      setContract(contractInstance);
-    }
-  }, [provider, contractAddress]);
+    if (isConnected && address && window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      setProvider(provider);
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+      if (contractAddress) {
         const signer = provider.getSigner();
-        const address = await signer.getAddress();
-
-        setProvider(provider);
-        setAccount(address);
-      } catch (error) {
-        console.error("Error connecting wallet:", error);
+        const contractInstance = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+        setContract(contractInstance);
       }
-    } else {
-      alert("Please install MetaMask!");
     }
-  };
+  }, [isConnected, address, contractAddress]);
 
   const selectGame = (gameId: number) => {
     setSelectedGameId(gameId);
     setCurrentView("game");
   };
 
-  if (!account) {
+  if (!isConnected || !address) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-200">
-        <ConnectWallet onConnect={connectWallet} />
+        <ConnectWallet onConnect={() => {}} />
       </div>
     );
   }
@@ -94,8 +83,14 @@ function App() {
         </h1>
         <div className="flex items-center gap-2.5">
           <span className="bg-gray-50 px-4 py-2 rounded-full font-mono text-sm text-gray-600 border-2 border-gray-200">
-            Connected: {account.slice(0, 6)}...{account.slice(-4)}
+            Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
           </span>
+          <button
+            onClick={() => disconnect()}
+            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+          >
+            Disconnect
+          </button>
         </div>
       </header>
 
@@ -126,7 +121,7 @@ function App() {
         {currentView === "home" && (
           <GameList
             contract={contract}
-            account={account}
+            account={address || ""}
             onSelectGame={selectGame}
           />
         )}
@@ -134,7 +129,7 @@ function App() {
         {(currentView === "create" || currentView === "game") && (
           <GameBoard
             contract={contract}
-            account={account}
+            account={address || ""}
             gameId={selectedGameId}
             mode={currentView === "create" ? "create" : "play"}
             onGameCreated={(gameId) => {
