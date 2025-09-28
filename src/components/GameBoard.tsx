@@ -58,12 +58,33 @@ const GameBoard: React.FC<GameBoardProps> = ({
       try {
         setLoading(true);
         const game = await contract.games(gameId);
+        console.log("Game data:", game);
+        console.log(
+          "Game createdAt type:",
+          typeof game.createdAt,
+          game.createdAt
+        );
+        console.log(
+          "Game revealDeadline type:",
+          typeof game.revealDeadline,
+          game.revealDeadline
+        );
+
         const state: GameState = {
           p1: game.p1,
           p2: game.p2,
-          stake: ethers.utils.formatEther(game.stake),
-          createdAt: game.createdAt.toNumber(),
-          revealDeadline: game.revealDeadline.toNumber(),
+          stake:
+            typeof game.stake === "string"
+              ? game.stake
+              : ethers.utils.formatEther(game.stake),
+          createdAt:
+            typeof game.createdAt.toNumber === "function"
+              ? game.createdAt.toNumber()
+              : Number(game.createdAt),
+          revealDeadline:
+            typeof game.revealDeadline.toNumber === "function"
+              ? game.revealDeadline.toNumber()
+              : Number(game.revealDeadline),
           settled: game.settled,
           p1Move: game.p1Move,
           p2Move: game.p2Move,
