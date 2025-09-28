@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import ShareModal from "./ShareModal";
 
 interface GameBoardProps {
   contract: ethers.Contract | null;
@@ -42,62 +43,73 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const [loading, setLoading] = useState(false);
   const [salt, setSalt] = useState("");
   const [phase, setPhase] = useState<
-    "create" | "commit" | "reveal" | "finished"
+    "create" | "waiting" | "commit" | "reveal" | "finished"
   >("create");
   const [, setMyCommit] = useState("");
   const [revealMoveState, setRevealMoveState] = useState<Move>(Move.None);
   const [revealSalt, setRevealSalt] = useState("");
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [createdGameId, setCreatedGameId] = useState<number | null>(null);
 
   useEffect(() => {
+    const loadGameState = async () => {
+      if (!contract || gameId === null) return;
+
+      try {
+        setLoading(true);
+        const game = await contract.games(gameId);
+        const state: GameState = {
+          p1: game.p1,
+          p2: game.p2,
+          stake: ethers.utils.formatEther(game.stake),
+          createdAt: game.createdAt.toNumber(),
+          revealDeadline: game.revealDeadline.toNumber(),
+          settled: game.settled,
+          p1Move: game.p1Move,
+          p2Move: game.p2Move,
+          p1Commit: game.p1Commit,
+          p2Commit: game.p2Commit,
+        };
+
+        setGameState(state);
+
+        // Determine phase
+        if (state.settled) {
+          setPhase("finished");
+        } else if (state.p2 === ethers.constants.AddressZero) {
+          // Game is waiting for second player
+          if (state.p1.toLowerCase() === account.toLowerCase()) {
+            setPhase("waiting"); // Creator is waiting
+          } else {
+            setPhase("commit"); // Other player can join
+          }
+        } else if (
+          state.revealDeadline > 0 &&
+          (state.p1Move === Move.None || state.p2Move === Move.None)
+        ) {
+          setPhase("reveal");
+        } else {
+          setPhase("finished");
+        }
+      } catch (error) {
+        console.error("Error loading game state:", error);
+        setPhase("finished"); // Fallback to finished if game doesn't exist
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (mode === "create") {
       setPhase("create");
     } else if (gameId !== null && contract) {
       loadGameState();
     }
-  }, [gameId, contract, mode]);
+  }, [gameId, contract, mode, account]);
 
   useEffect(() => {
     // Generate random salt when component mounts
     setSalt(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
   }, []);
-
-  const loadGameState = async () => {
-    if (!contract || gameId === null) return;
-
-    try {
-      const game = await contract.games(gameId);
-      const state: GameState = {
-        p1: game.p1,
-        p2: game.p2,
-        stake: ethers.utils.formatEther(game.stake),
-        createdAt: game.createdAt.toNumber(),
-        revealDeadline: game.revealDeadline.toNumber(),
-        settled: game.settled,
-        p1Move: game.p1Move,
-        p2Move: game.p2Move,
-        p1Commit: game.p1Commit,
-        p2Commit: game.p2Commit,
-      };
-
-      setGameState(state);
-
-      // Determine phase
-      if (state.settled) {
-        setPhase("finished");
-      } else if (state.p2 === ethers.constants.AddressZero) {
-        setPhase("commit");
-      } else if (
-        state.revealDeadline > 0 &&
-        (state.p1Move === Move.None || state.p2Move === Move.None)
-      ) {
-        setPhase("reveal");
-      } else {
-        setPhase("finished");
-      }
-    } catch (error) {
-      console.error("Error loading game state:", error);
-    }
-  };
 
   const createGame = async () => {
     if (!contract || selectedMove === Move.None) return;
@@ -116,11 +128,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       const receipt = await tx.wait();
       const gameCreatedEvent = receipt.events?.find(
-        (e: any) => e.event === "GameCreated"
+        (e: { event: string; args: { gameId: { toNumber: () => number } } }) =>
+          e.event === "GameCreated"
       );
 
       if (gameCreatedEvent) {
         const newGameId = gameCreatedEvent.args.gameId.toNumber();
+        setCreatedGameId(newGameId);
+        setShowShareModal(true);
         onGameCreated(newGameId);
       }
     } catch (error) {
@@ -153,7 +168,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       });
 
       await tx.wait();
-      await loadGameState();
+      // Game state will be reloaded automatically
     } catch (error) {
       console.error("Error joining game:", error);
       alert("Error joining game. Please try again.");
@@ -176,7 +191,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       const tx = await contract.reveal(gameId, revealMoveState, revealSalt);
       await tx.wait();
-      await loadGameState();
+      // Game state will be reloaded automatically
     } catch (error) {
       console.error("Error revealing move:", error);
       alert("Error revealing move. Please check your move and salt.");
@@ -249,60 +264,163 @@ const GameBoard: React.FC<GameBoardProps> = ({
     return false;
   };
 
-  if (phase === "create") {
+  // Show loading state while game state is being loaded
+  if (loading && mode === "play" && gameId !== null) {
     return (
-      <div className="px-5 max-w-4xl mx-auto">
-        <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
-          <h2 className="text-3xl m-0 mb-8 text-gray-800">
-            🎮 Create New Game
-          </h2>
-
-          <div className="mb-8">
-            <label className="block font-semibold mb-2.5 text-gray-600">
-              Stake Amount (ETH):
-            </label>
-            <input
-              type="number"
-              step="0.001"
-              min="0.001"
-              value={stake}
-              onChange={(e) => setStake(e.target.value)}
-              placeholder="0.001"
-              className="w-52 px-3 py-3 border-2 border-gray-200 rounded-xl text-lg text-center focus:outline-none focus:border-primary"
-            />
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-xl mb-5 text-gray-600">Choose Your Move:</h3>
-            <div className="flex justify-center gap-5 flex-wrap">
-              {[Move.Rock, Move.Paper, Move.Scissors].map((move) => (
-                <button
-                  key={move}
-                  className={`bg-white border-3 rounded-2xl p-5 cursor-pointer transition-all duration-300 min-w-32 flex flex-col items-center gap-2.5 hover:border-primary hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20 ${
-                    selectedMove === move
-                      ? "border-primary bg-gradient-to-br from-primary to-primary-dark text-white transform -translate-y-0.5 shadow-lg shadow-primary/30"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => setSelectedMove(move)}
-                >
-                  <span className="text-4xl">{getMoveIcon(move)}</span>
-                  <span className="font-semibold text-lg">
-                    {getMoveName(move)}
-                  </span>
-                </button>
-              ))}
+      <>
+        <div className="px-5 max-w-4xl mx-auto">
+          <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+            <div className="py-16 text-center">
+              <div className="w-10 h-10 border-4 border-gray-300 border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
+              <p>Loading game...</p>
             </div>
           </div>
-
-          <button
-            className="px-8 py-4 border-none rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 min-w-52 bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-500/30 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            onClick={createGame}
-            disabled={loading || selectedMove === Move.None}
-          >
-            {loading ? "Creating..." : `Create Game (${stake} ETH)`}
-          </button>
         </div>
-      </div>
+
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          gameId={createdGameId}
+          gameUrl={`${window.location.origin}/game/${createdGameId}`}
+        />
+      </>
+    );
+  }
+
+  if (phase === "create") {
+    return (
+      <>
+        <div className="px-5 max-w-4xl mx-auto">
+          <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+            <h2 className="text-3xl m-0 mb-8 text-gray-800">
+              🎮 Create New Game
+            </h2>
+
+            <div className="mb-8">
+              <label className="block font-semibold mb-2.5 text-gray-600">
+                Stake Amount (ETH):
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                min="0.001"
+                value={stake}
+                onChange={(e) => setStake(e.target.value)}
+                placeholder="0.001"
+                className="w-52 px-3 py-3 border-2 border-gray-200 rounded-xl text-lg text-center focus:outline-none focus:border-primary"
+              />
+            </div>
+
+            <div className="mb-8">
+              <h3 className="text-xl mb-5 text-gray-600">Choose Your Move:</h3>
+              <div className="flex justify-center gap-5 flex-wrap">
+                {[Move.Rock, Move.Paper, Move.Scissors].map((move) => (
+                  <button
+                    key={move}
+                    className={`bg-white border-3 rounded-2xl p-5 cursor-pointer transition-all duration-300 min-w-32 flex flex-col items-center gap-2.5 hover:border-primary hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20 ${
+                      selectedMove === move
+                        ? "border-primary bg-gradient-to-br from-primary to-primary-dark text-white transform -translate-y-0.5 shadow-lg shadow-primary/30"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => setSelectedMove(move)}
+                  >
+                    <span className="text-4xl">{getMoveIcon(move)}</span>
+                    <span className="font-semibold text-lg">
+                      {getMoveName(move)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              className="px-8 py-4 border-none rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 min-w-52 bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-500/30 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+              onClick={createGame}
+              disabled={loading || selectedMove === Move.None}
+            >
+              {loading ? "Creating..." : `Create Game (${stake} ETH)`}
+            </button>
+          </div>
+        </div>
+
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          gameId={createdGameId}
+          gameUrl={`${window.location.origin}/game/${createdGameId}`}
+        />
+      </>
+    );
+  }
+
+  if (phase === "waiting" && gameState) {
+    return (
+      <>
+        <div className="px-5 max-w-4xl mx-auto">
+          <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+            <h2 className="text-3xl m-0 mb-8 text-gray-800">
+              🎮 Game #{gameId}
+            </h2>
+
+            <div className="mb-8 p-5 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border-2 border-yellow-200">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="w-4 h-4 bg-yellow-500 rounded-full animate-pulse"></div>
+                <h3 className="text-xl font-semibold text-yellow-800">
+                  Waiting for Player 2
+                </h3>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-600">
+                    Player 1 (You):
+                  </span>
+                  <span className="font-mono text-gray-800">
+                    {gameState.p1.slice(0, 6)}...{gameState.p1.slice(-4)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-600">Player 2:</span>
+                  <span className="font-mono text-gray-500 italic">
+                    Waiting for opponent...
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-600">Stake:</span>
+                  <span className="font-semibold text-gray-800">
+                    {gameState.stake} ETH
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <p className="text-gray-600 mb-4">
+                Share this game with a friend to invite them to play!
+              </p>
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="bg-gradient-to-r from-primary to-primary-dark text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                📤 Share Game
+              </button>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                The game will start automatically when someone joins
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          gameId={gameId}
+          gameUrl={`${window.location.origin}/game/${gameId}`}
+        />
+      </>
     );
   }
 
@@ -560,14 +678,23 @@ const GameBoard: React.FC<GameBoardProps> = ({
   }
 
   return (
-    <div className="px-5 max-w-4xl mx-auto">
-      <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
-        <div className="py-16 text-center">
-          <div className="w-10 h-10 border-4 border-gray-300 border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
-          <p>Loading game...</p>
+    <>
+      <div className="px-5 max-w-4xl mx-auto">
+        <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
+          <div className="py-16 text-center">
+            <div className="w-10 h-10 border-4 border-gray-300 border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
+            <p>Loading game...</p>
+          </div>
         </div>
       </div>
-    </div>
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        gameId={createdGameId}
+        gameUrl={`${window.location.origin}/game/${createdGameId}`}
+      />
+    </>
   );
 };
 

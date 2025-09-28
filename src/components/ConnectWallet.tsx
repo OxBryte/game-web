@@ -1,11 +1,7 @@
 import React from "react";
 import { useConnect } from "wagmi";
 
-interface ConnectWalletProps {
-  onConnect: () => void;
-}
-
-const ConnectWallet: React.FC<ConnectWalletProps> = () => {
+const ConnectWallet: React.FC = () => {
   const { connect, connectors, isPending } = useConnect();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark p-5">
