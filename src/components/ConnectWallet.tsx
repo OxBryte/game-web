@@ -50,7 +50,7 @@ const ConnectWallet: React.FC = () => {
           {connectors.map((connector) => (
             <button
               key={connector.uid}
-              onClick={() => connect({ connector })}
+              onClick={() => open()}
               disabled={isPending}
               className="w-full bg-gradient-to-r from-primary to-primary-dark text-white border-none px-8 py-4 rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-2.5 hover:transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
