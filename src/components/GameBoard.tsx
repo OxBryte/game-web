@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import ShareModal from "./ShareModal";
@@ -171,15 +172,19 @@ const GameBoard: React.FC<GameBoardProps> = ({
         setShowShareModal(true);
         onGameCreated(newGameId);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating game:", error);
       console.error("Error details:", {
-        message: error.message,
-        code: error.code,
-        reason: error.reason,
-        data: error.data,
+        message: error?.message,
+        code: error?.code,
+        reason: error?.reason,
+        data: error?.data,
       });
-      alert(`Error creating game: ${error.message}. Please try again.`);
+      alert(
+        `Error creating game: ${
+          error?.message || "Unknown error"
+        }. Please try again.`
+      );
     } finally {
       setLoading(false);
     }
@@ -196,21 +201,64 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
     try {
       setLoading(true);
+      console.log("Joining game with:", {
+        gameId,
+        selectedMove,
+        salt,
+        account,
+        stake: gameState.stake,
+        gameState,
+      });
+
+      // Validate game state before attempting to join
+      if (gameState.p2 !== ethers.constants.AddressZero) {
+        throw new Error("Game already has 2 players");
+      }
+
+      if (gameState.p1.toLowerCase() === account.toLowerCase()) {
+        throw new Error("Cannot join your own game");
+      }
 
       // Generate commit hash
       const commit = await contract.computeCommit(selectedMove, salt, account);
+      console.log("Generated commit for join:", commit);
       setMyCommit(commit);
+
+      // Check if we have enough ETH for the stake
+      const stakeWei = ethers.utils.parseEther(gameState.stake);
+      console.log("Stake amount (wei):", stakeWei.toString());
 
       // Join game
       const tx = await contract.join(gameId, commit, {
-        value: ethers.utils.parseEther(gameState.stake),
+        value: stakeWei,
+      });
+      console.log("Join transaction sent:", tx.hash);
+
+      const receipt = await tx.wait();
+      console.log("Join transaction receipt:", receipt);
+    } catch (error: any) {
+      console.error("Error joining game:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        code: error?.code,
+        reason: error?.reason,
+        data: error?.data,
       });
 
-      await tx.wait();
-      // Game state will be reloaded automatically
-    } catch (error) {
-      console.error("Error joining game:", error);
-      alert("Error joining game. Please try again.");
+      let errorMessage = "Error joining game. Please try again.";
+
+      if (error?.message?.includes("execution reverted")) {
+        errorMessage =
+          "Cannot join this game. It may already have 2 players or you may be trying to join your own game.";
+      } else if (error?.message?.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds to join this game.";
+      } else if (error?.message?.includes("Game already has 2 players")) {
+        errorMessage = "This game already has 2 players.";
+      } else if (error?.message?.includes("Cannot join your own game")) {
+        errorMessage = "You cannot join your own game.";
+      }
+
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -468,6 +516,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
       gameState.p2 === ethers.constants.AddressZero &&
       gameState.p1.toLowerCase() !== account.toLowerCase();
 
+    const isMyGame = gameState.p1.toLowerCase() === account.toLowerCase();
+    const hasTwoPlayers = gameState.p2 !== ethers.constants.AddressZero;
+
     return (
       <div className="px-5 max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
@@ -479,6 +530,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 <span className="font-semibold text-gray-600">Player 1:</span>
                 <span className="font-mono text-gray-800">
                   {gameState.p1.slice(0, 6)}...{gameState.p1.slice(-4)}
+                  {isMyGame && (
+                    <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      You
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -537,7 +593,24 @@ const GameBoard: React.FC<GameBoardProps> = ({
           {!canJoin && (
             <div className="py-10 px-5 text-gray-600">
               <div className="text-5xl mb-4 animate-pulse-custom">⏳</div>
-              <p>Waiting for another player to join...</p>
+              {isMyGame ? (
+                <div>
+                  <p className="text-lg font-semibold mb-2">
+                    This is your game!
+                  </p>
+                  <p>
+                    You cannot join your own game. Wait for another player to
+                    join.
+                  </p>
+                </div>
+              ) : hasTwoPlayers ? (
+                <div>
+                  <p className="text-lg font-semibold mb-2">Game is full!</p>
+                  <p>This game already has 2 players.</p>
+                </div>
+              ) : (
+                <p>Waiting for another player to join...</p>
+              )}
             </div>
           )}
         </div>
