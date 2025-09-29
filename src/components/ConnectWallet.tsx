@@ -1,8 +1,8 @@
 import React from "react";
-import { useWalletKit } from "@reown/walletkit";
+import { useConnect } from "wagmi";
 
 const ConnectWallet: React.FC = () => {
-  const { open } = useWalletKit();
+  const { connect, connectors, isPending } = useConnect();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark p-5">
       <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-10 text-center shadow-2xl max-w-md w-full">
