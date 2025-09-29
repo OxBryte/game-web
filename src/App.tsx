@@ -33,36 +33,47 @@ function App() {
 
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || "";
   useEffect(() => {
-    if (isConnected && address && window.ethereum) {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      setProvider(provider);
+    const initializeContract = async () => {
+      if (isConnected && address && window.ethereum) {
+        try {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          setProvider(provider);
 
-      if (contractAddress) {
-        const contractABI = [
-          "function create(bytes32 commit) external payable returns (uint256 gameId)",
-          "function join(uint256 gameId, bytes32 commit) external payable",
-          "function reveal(uint256 gameId, uint8 moveRaw, bytes32 salt) external",
-          "function claimTimeout(uint256 gameId) external",
-          "function cancelIfNoOpponent(uint256 gameId) external",
-          "function games(uint256) external view returns (address p1, address p2, uint128 stake, uint40 createdAt, uint40 revealDeadline, bytes32 p1Commit, bytes32 p2Commit, uint8 p1Move, uint8 p2Move, bool settled)",
-          "function computeCommit(uint8 moveRaw, bytes32 salt, address player) external pure returns (bytes32)",
-          "function nextGameId() external view returns (uint256)",
-          "event GameCreated(uint256 indexed gameId, address indexed p1, uint128 stake)",
-          "event GameJoined(uint256 indexed gameId, address indexed p2)",
-          "event BothCommitted(uint256 indexed gameId)",
-          "event Revealed(uint256 indexed gameId, address indexed player, uint8 move)",
-          "event Settled(uint256 indexed gameId, address winner, uint256 p1Payout, uint256 p2Payout, uint256 fee)",
-        ];
+          if (contractAddress) {
+            const contractABI = [
+              "function create(bytes32 commit) external payable returns (uint256 gameId)",
+              "function join(uint256 gameId, bytes32 commit) external payable",
+              "function reveal(uint256 gameId, uint8 moveRaw, bytes32 salt) external",
+              "function claimTimeout(uint256 gameId) external",
+              "function cancelIfNoOpponent(uint256 gameId) external",
+              "function games(uint256) external view returns (address p1, address p2, uint128 stake, uint40 createdAt, uint40 revealDeadline, bytes32 p1Commit, bytes32 p2Commit, uint8 p1Move, uint8 p2Move, bool settled)",
+              "function computeCommit(uint8 moveRaw, bytes32 salt, address player) external pure returns (bytes32)",
+              "function nextGameId() external view returns (uint256)",
+              "event GameCreated(uint256 indexed gameId, address indexed p1, uint128 stake)",
+              "event GameJoined(uint256 indexed gameId, address indexed p2)",
+              "event BothCommitted(uint256 indexed gameId)",
+              "event Revealed(uint256 indexed gameId, address indexed player, uint8 move)",
+              "event Settled(uint256 indexed gameId, address winner, uint256 p1Payout, uint256 p2Payout, uint256 fee)",
+            ];
 
-        const signer = provider.getSigner();
-        const contractInstance = new ethers.Contract(
-          contractAddress,
-          contractABI,
-          signer
-        );
-        setContract(contractInstance);
+            // Request account access to ensure we have the right account
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+
+            const signer = provider.getSigner();
+            const contractInstance = new ethers.Contract(
+              contractAddress,
+              contractABI,
+              signer
+            );
+            setContract(contractInstance);
+          }
+        } catch (error) {
+          console.error("Error initializing contract:", error);
+        }
       }
-    }
+    };
+
+    initializeContract();
   }, [isConnected, address, contractAddress]);
 
   if (!isConnected || !address) {

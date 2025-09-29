@@ -58,7 +58,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       try {
         setLoading(true);
         const game = await contract.games(gameId);
-         console.log("Game data:", game); // Auto-commit test
+        console.log("Game data:", game); // Auto-commit test
         console.log(
           "Game createdAt type:",
           typeof game.createdAt,
@@ -137,17 +137,28 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
     try {
       setLoading(true);
+      console.log("Creating game with:", {
+        contract,
+        selectedMove,
+        salt,
+        account,
+        stake,
+      });
 
       // Generate commit hash
       const commit = await contract.computeCommit(selectedMove, salt, account);
+      console.log("Generated commit:", commit);
       setMyCommit(commit);
 
       // Create game
       const tx = await contract.create(commit, {
         value: ethers.utils.parseEther(stake),
       });
+      console.log("Transaction sent:", tx.hash);
 
       const receipt = await tx.wait();
+      console.log("Transaction receipt:", receipt);
+
       const gameCreatedEvent = receipt.events?.find(
         (e: { event: string; args: { gameId: { toNumber: () => number } } }) =>
           e.event === "GameCreated"
@@ -155,13 +166,20 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       if (gameCreatedEvent) {
         const newGameId = gameCreatedEvent.args.gameId.toNumber();
+        console.log("Game created with ID:", newGameId);
         setCreatedGameId(newGameId);
         setShowShareModal(true);
         onGameCreated(newGameId);
       }
     } catch (error) {
       console.error("Error creating game:", error);
-      alert("Error creating game. Please try again.");
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        reason: error.reason,
+        data: error.data,
+      });
+      alert(`Error creating game: ${error.message}. Please try again.`);
     } finally {
       setLoading(false);
     }
