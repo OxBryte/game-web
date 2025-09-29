@@ -130,8 +130,28 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   useEffect(() => {
     // Generate random salt when component mounts
-    setSalt(ethers.utils.hexlify(ethers.utils.randomBytes(32)));
+    const newSalt = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+    setSalt(newSalt);
+    console.log("🔐 Generated salt for this game:", newSalt);
   }, []);
+
+  const generateNewSalt = () => {
+    const newSalt = ethers.utils.hexlify(ethers.utils.randomBytes(32));
+    setSalt(newSalt);
+    console.log("🔐 New salt generated:", newSalt);
+  };
+
+  const copySaltToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(salt);
+      alert(
+        "Salt copied to clipboard! Save it safely - you'll need it to reveal your move."
+      );
+    } catch (err) {
+      console.error("Failed to copy salt:", err);
+      alert("Failed to copy salt. Please copy it manually.");
+    }
+  };
 
   const createGame = async () => {
     if (!contract || selectedMove === Move.None) return;
@@ -398,6 +418,40 @@ const GameBoard: React.FC<GameBoardProps> = ({
               />
             </div>
 
+            {/* Salt Display */}
+            <div className="mb-8 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-2xl">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-yellow-800 flex items-center gap-2">
+                  🔐 Your Salt (Save This!)
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={generateNewSalt}
+                    className="px-3 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 text-sm rounded-lg transition-colors"
+                    title="Generate new salt"
+                  >
+                    🔄 New
+                  </button>
+                  <button
+                    onClick={copySaltToClipboard}
+                    className="px-3 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 text-sm rounded-lg transition-colors"
+                    title="Copy salt to clipboard"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+              </div>
+              <p className="text-sm text-yellow-700 mb-3">
+                ⚠️ You'll need this salt to reveal your move later. Save it
+                safely!
+              </p>
+              <div className="bg-white p-3 rounded-lg border border-yellow-300">
+                <code className="text-xs text-gray-800 break-all block font-mono">
+                  {salt}
+                </code>
+              </div>
+            </div>
+
             <div className="mb-8">
               <h3 className="text-xl mb-5 text-gray-600">Choose Your Move:</h3>
               <div className="flex justify-center gap-5 flex-wrap">
@@ -427,6 +481,36 @@ const GameBoard: React.FC<GameBoardProps> = ({
             >
               {loading ? "Creating..." : `Create Game (${stake} ETH)`}
             </button>
+          </div>
+        </div>
+
+        {/* Floating Salt Management Widget */}
+        <div className="fixed bottom-4 right-4 z-40">
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg max-w-xs">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                🔐 Salt
+              </h4>
+              <div className="flex gap-1">
+                <button
+                  onClick={generateNewSalt}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Generate new salt"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={copySaltToClipboard}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Copy salt"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-50 p-2 rounded text-xs font-mono text-gray-600 break-all">
+              {salt.slice(0, 20)}...
+            </div>
           </div>
         </div>
 
@@ -501,6 +585,36 @@ const GameBoard: React.FC<GameBoardProps> = ({
           </div>
         </div>
 
+        {/* Floating Salt Management Widget */}
+        <div className="fixed bottom-4 right-4 z-40">
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg max-w-xs">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                🔐 Salt
+              </h4>
+              <div className="flex gap-1">
+                <button
+                  onClick={generateNewSalt}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Generate new salt"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={copySaltToClipboard}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Copy salt"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-50 p-2 rounded text-xs font-mono text-gray-600 break-all">
+              {salt.slice(0, 20)}...
+            </div>
+          </div>
+        </div>
+
         <ShareModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
@@ -556,6 +670,40 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
           {canJoin && (
             <>
+              {/* Salt Display for Join Game */}
+              <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-2xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-blue-800 flex items-center gap-2">
+                    🔐 Your Salt (Save This!)
+                  </h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={generateNewSalt}
+                      className="px-3 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 text-sm rounded-lg transition-colors"
+                      title="Generate new salt"
+                    >
+                      🔄 New
+                    </button>
+                    <button
+                      onClick={copySaltToClipboard}
+                      className="px-3 py-1 bg-blue-200 hover:bg-blue-300 text-blue-800 text-sm rounded-lg transition-colors"
+                      title="Copy salt to clipboard"
+                    >
+                      📋 Copy
+                    </button>
+                  </div>
+                </div>
+                <p className="text-sm text-blue-700 mb-3">
+                  ⚠️ You'll need this salt to reveal your move later. Save it
+                  safely!
+                </p>
+                <div className="bg-white p-3 rounded-lg border border-blue-300">
+                  <code className="text-xs text-gray-800 break-all block font-mono">
+                    {salt}
+                  </code>
+                </div>
+              </div>
+
               <div className="mb-8">
                 <h3 className="text-xl mb-5 text-gray-600">
                   Choose Your Move:
@@ -614,6 +762,36 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           )}
         </div>
+
+        {/* Floating Salt Management Widget */}
+        <div className="fixed bottom-4 right-4 z-40">
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg max-w-xs">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                🔐 Salt
+              </h4>
+              <div className="flex gap-1">
+                <button
+                  onClick={generateNewSalt}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Generate new salt"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={copySaltToClipboard}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Copy salt"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-50 p-2 rounded text-xs font-mono text-gray-600 break-all">
+              {salt.slice(0, 20)}...
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -625,6 +803,40 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <h2 className="text-3xl m-0 mb-8 text-gray-800">
             🎮 Game #{gameId} - Reveal Phase
           </h2>
+
+          {/* Salt Management for Reveal Phase */}
+          <div className="mb-8 p-4 bg-orange-50 border-2 border-orange-200 rounded-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-orange-800 flex items-center gap-2">
+                🔐 Salt Management
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={generateNewSalt}
+                  className="px-3 py-1 bg-orange-200 hover:bg-orange-300 text-orange-800 text-sm rounded-lg transition-colors"
+                  title="Generate new salt"
+                >
+                  🔄 New Salt
+                </button>
+                <button
+                  onClick={copySaltToClipboard}
+                  className="px-3 py-1 bg-orange-200 hover:bg-orange-300 text-orange-800 text-sm rounded-lg transition-colors"
+                  title="Copy current salt to clipboard"
+                >
+                  📋 Copy Salt
+                </button>
+              </div>
+            </div>
+            <p className="text-sm text-orange-700 mb-3">
+              💡 Use the salt you used when creating/joining this game to reveal
+              your move.
+            </p>
+            <div className="bg-white p-3 rounded-lg border border-orange-300">
+              <code className="text-xs text-gray-800 break-all block font-mono">
+                {salt}
+              </code>
+            </div>
+          </div>
 
           <div className="mb-8">
             <div className="flex justify-around items-center my-8 flex-wrap gap-5">
@@ -719,6 +931,36 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           )}
         </div>
+
+        {/* Floating Salt Management Widget */}
+        <div className="fixed bottom-4 right-4 z-40">
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg max-w-xs">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                🔐 Salt
+              </h4>
+              <div className="flex gap-1">
+                <button
+                  onClick={generateNewSalt}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Generate new salt"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={copySaltToClipboard}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Copy salt"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-50 p-2 rounded text-xs font-mono text-gray-600 break-all">
+              {salt.slice(0, 20)}...
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -732,6 +974,39 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <h2 className="text-3xl m-0 mb-8 text-gray-800">
             🎮 Game #{gameId} - Finished
           </h2>
+
+          {/* Salt Management for Finished Game */}
+          <div className="mb-8 p-4 bg-green-50 border-2 border-green-200 rounded-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-green-800 flex items-center gap-2">
+                🔐 Salt Used in This Game
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={generateNewSalt}
+                  className="px-3 py-1 bg-green-200 hover:bg-green-300 text-green-800 text-sm rounded-lg transition-colors"
+                  title="Generate new salt for future games"
+                >
+                  🔄 New Salt
+                </button>
+                <button
+                  onClick={copySaltToClipboard}
+                  className="px-3 py-1 bg-green-200 hover:bg-green-300 text-green-800 text-sm rounded-lg transition-colors"
+                  title="Copy salt to clipboard"
+                >
+                  📋 Copy Salt
+                </button>
+              </div>
+            </div>
+            <p className="text-sm text-green-700 mb-3">
+              🎉 Game completed! This was the salt used in this game.
+            </p>
+            <div className="bg-white p-3 rounded-lg border border-green-300">
+              <code className="text-xs text-gray-800 break-all block font-mono">
+                {salt}
+              </code>
+            </div>
+          </div>
 
           <div className="text-center">
             <div className="flex justify-around items-center my-8 flex-wrap gap-5">
@@ -785,6 +1060,36 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Floating Salt Management Widget */}
+        <div className="fixed bottom-4 right-4 z-40">
+          <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg max-w-xs">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                🔐 Salt
+              </h4>
+              <div className="flex gap-1">
+                <button
+                  onClick={generateNewSalt}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Generate new salt"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={copySaltToClipboard}
+                  className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                  title="Copy salt"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-50 p-2 rounded text-xs font-mono text-gray-600 break-all">
+              {salt.slice(0, 20)}...
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -796,6 +1101,36 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <div className="py-16 text-center">
             <div className="w-10 h-10 border-4 border-gray-300 border-t-primary rounded-full animate-spin mx-auto mb-5"></div>
             <p>Loading game...</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Salt Management Widget */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-lg max-w-xs">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+              🔐 Salt
+            </h4>
+            <div className="flex gap-1">
+              <button
+                onClick={generateNewSalt}
+                className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                title="Generate new salt"
+              >
+                🔄
+              </button>
+              <button
+                onClick={copySaltToClipboard}
+                className="p-1 hover:bg-gray-100 rounded text-gray-600 hover:text-gray-800 transition-colors"
+                title="Copy salt"
+              >
+                📋
+              </button>
+            </div>
+          </div>
+          <div className="bg-gray-50 p-2 rounded text-xs font-mono text-gray-600 break-all">
+            {salt.slice(0, 20)}...
           </div>
         </div>
       </div>
