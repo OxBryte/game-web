@@ -2,7 +2,7 @@ import { Core } from "@walletconnect/core";
 import { WalletKit } from "@reown/walletkit";
 
 const core = new Core({
-  projectId: process.env.PROJECT_ID,
+  projectId: import.meta.env.VITE_REOWN_PROJECT_ID,
 });
 
 export const walletKit = await WalletKit.init({
