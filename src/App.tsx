@@ -5,7 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAppKitAccount, useDisconnect } from "wagmi";
 import { ethers } from "ethers";
 import ConnectWallet from "./components/ConnectWallet";
 import Home from "./pages/Home";
@@ -25,7 +25,8 @@ export interface GameData {
 }
 
 function App() {
-  const { address, isConnected } = useAccount();
+const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
+  useAppKitAccount();
   const { disconnect } = useDisconnect();
 
   const [, setProvider] = useState<ethers.providers.Web3Provider | null>(null);

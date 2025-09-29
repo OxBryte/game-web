@@ -2,7 +2,7 @@ import React from "react";
 import { useAppKit } from "@reown/appkit/react";
 
 const ConnectWallet: React.FC = () => {
-  const { open, close } = useAppKit();
+  const { open } = useAppKit();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark p-5">
