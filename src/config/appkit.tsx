@@ -22,14 +22,22 @@ const projectId = import.meta.env.VITE_REOWN_PROJECT_ID;
 
 // 2. Create a metadata object - optional
 const metadata = {
-  name: "Base Watch",
-  description: "Base Watch",
-  url: "https://base-watch.vercel.app", // origin must match your domain & subdomain
-  icons: ["https://base-watch.vercel.app/favicon.ico"],
+  name: "Rock Paper Scissors",
+  description: "On-Chain Rock Paper Scissors Game",
+  url: "https://rock-paper-scissors.com", // origin must match your domain & subdomain
+  icons: ["https://avatars.githubusercontent.com/u/179229932"],
 };
 
 // 3. Set the networks
-const networks = [baseSepolia, mainnet, arbitrum, optimism, polygon, base, celo] as AppKitNetwork[];
+const networks = [
+  baseSepolia,
+  mainnet,
+  arbitrum,
+  optimism,
+  polygon,
+  base,
+  celo,
+] as AppKitNetwork[];
 // 4. Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
   networks: networks as [AppKitNetwork, ...AppKitNetwork[]] as AppKitNetwork[],

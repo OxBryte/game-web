@@ -5,12 +5,12 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useAppKitAccount, useDisconnect } from "wagmi";
 import { ethers } from "ethers";
 import ConnectWallet from "./components/ConnectWallet";
 import Home from "./pages/Home";
 import CreateGame from "./pages/CreateGame";
 import GameDetail from "./pages/GameDetail";
+import { useAppKitAccount, useDisconnect } from "@reown/appkit/react";
 
 export interface GameData {
   gameId: number;
@@ -25,8 +25,7 @@ export interface GameData {
 }
 
 function App() {
-const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
-  useAppKitAccount();
+  const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
 
   const [, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
