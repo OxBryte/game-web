@@ -47,19 +47,7 @@ const ConnectWallet: React.FC = () => {
 
         {/* Wallet Connect Buttons */}
         <div className="space-y-3">
-          {connectors.map((connector) => (
-            <button
-              key={connector.uid}
-              onClick={() => connect({ connector })}
-              disabled={isPending}
-              className="w-full bg-gradient-to-r from-primary to-primary-dark text-white border-none px-8 py-4 rounded-full text-lg font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-2.5 hover:transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="text-xl">
-                {connector.name === "Injected" ? "🦊" : "🔗"}
-              </span>
-              {isPending ? "Connecting..." : `Connect ${connector.name}`}
-            </button>
-          ))}
+          
         </div>
 
         <p className="text-gray-500 text-sm m-0 leading-relaxed">

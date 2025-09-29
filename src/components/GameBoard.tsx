@@ -58,7 +58,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       try {
         setLoading(true);
         const game = await contract.games(gameId);
-        console.log("Game data:", game);
+         console.log("Game data:", game); // Auto-commit test
         console.log(
           "Game createdAt type:",
           typeof game.createdAt,
